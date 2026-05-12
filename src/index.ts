@@ -16,6 +16,7 @@ declare module 'koishi' {
 }
 
 export function apply(ctx: Context) {
+  const stream = '<qq:markdown stream="[object Object]">'
   const atSelf = (session: Session) => {
     return `<at id="${session.selfId}"/>`
   }
@@ -27,12 +28,14 @@ export function apply(ctx: Context) {
   ctx.on('before-send', (session) => {
     session.content ??= ''
     session.content = session.content.replace(h.escape(atSelf(session)), '').trim()
-    if (session.oneMoreTime) {
-      session.content = String(h(
-        'markdown',
-        escapeMarkdown(session.content),
-        `\n> 再来一次 👉 ${shortcut(session.isDirect, session.oneMoreTime)}`,
-      ))
-    }
+    if (!session.oneMoreTime || session.content.startsWith(stream))
+      return
+
+    const oneMoreTime = `> 再来一次 👉 ${shortcut(session.isDirect, session.oneMoreTime)}`
+    const element = session.elements?.[0]
+    const content = element?.type.includes('markdown')
+      ? h.unescape(element.children.join(''))
+      : escapeMarkdown(session.content)
+    session.elements = [h('markdown', `${content}\n${oneMoreTime}`)]
   })
 }
