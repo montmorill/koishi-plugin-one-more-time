@@ -1,20 +1,22 @@
 {
   "name": "koishi-plugin-one-more-time",
-  "description": "",
   "version": "0.0.1",
-  "main": "lib/index.js",
+  "description": "",
   "typings": "lib/index.d.ts",
-  "files": [
-    "lib",
-    "dist"
-  ],
   "license": "MIT",
   "keywords": [
     "chatbot",
     "koishi",
     "plugin"
   ],
+  "main": "lib/index.js",
+  "files": [
+    "dist",
+    "lib"
+  ],
   "peerDependencies": {
-    "koishi": "4.18.11"
+    "koishi": "4.18.11",
+    "koishi-plugin-adapter-qq-crack": "^1.0.6",
+    "koishi-plugin-montmorill": "*"
   }
 }
