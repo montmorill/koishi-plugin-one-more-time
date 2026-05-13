@@ -1,22 +1,17 @@
-import type { Context, Session } from 'koishi'
+import type { Context } from 'koishi'
 import { h, Schema } from 'koishi'
 import { escapeMarkdown } from 'koishi-plugin-adapter-qq-crack'
 import { shortcut } from 'koishi-plugin-montmorill'
 
 export const name = 'one-more-time'
-
 export interface Config {
-  filterAtSelf: boolean
-  skipWords: string[]
+  maxLength: number
+  skips: string[]
 }
 
 export const Config: Schema<Config> = Schema.object({
-  filterAtSelf: Schema.boolean().default(true).description('过滤 <at id="selfId"/> 元素。'),
-  skipWords: Schema.array(Schema.string()).default([
-    '<qq:markdown stream="[object Object]">',
-    '✅️回答正确！',
-    '❌️回答错误！',
-  ]).description('跳过含有这些关键词的内容。'),
+  maxLength: Schema.number().default(100).description('最大长度。'),
+  skips: Schema.array(Schema.string()).default([]).description('跳过匹配的内容。'),
 })
 
 declare module 'koishi' {
@@ -26,25 +21,16 @@ declare module 'koishi' {
 }
 
 export function apply(ctx: Context, config: Config) {
-  const atSelf = (session: Session) => {
-    return `<at id="${session.selfId}"/>`
-  }
-
   ctx.on('message', (session) => {
-    session.oneMoreTime = session.content
-    if (config.filterAtSelf) {
-      session.oneMoreTime = session.oneMoreTime
-        ?.replace(atSelf(session), '')
-        .trimStart()
-    }
-    session.oneMoreTime = session.oneMoreTime?.replace(/\s+$/, ' ')
+    session.oneMoreTime = session.content?.replace(/\s+$/, ' ')
   })
 
+  const skips = config.skips.map(regex => new RegExp(regex))
+
   ctx.before('send', (session) => {
-    session.content ??= ''
-    session.content = session.content.replace(atSelf(session), '')
-    if (!session.oneMoreTime || session.oneMoreTime.length > 100
-      || config.skipWords.some(word => session.content?.includes(word))) {
+    if (!session.content || !session.oneMoreTime
+      || session.oneMoreTime.length > config.maxLength
+      || skips.some(regex => regex.test(session.content!))) {
       return
     }
 
