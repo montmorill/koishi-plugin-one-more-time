@@ -36,15 +36,23 @@ export function apply(ctx: Context, config: Config) {
       return
     }
 
-    const lastElement = session.elements[session.elements.length - 1]
+    let lastElement = session.elements[session.elements.length - 1]
+    if (lastElement.type === 'text') {
+      session.elements.pop()
+      session.elements.push(...h.parse(lastElement.attrs.content))
+      lastElement = session.elements[session.elements.length - 1]
+    }
     const oneMoreTime = session.oneMoreTime.includes('\n')
       ? `> 👉 ${shortcut.input(session.oneMoreTime, '再来一次')}`
       : `> 再来一次 👉 ${shortcut(session.isDirect, session.oneMoreTime)}`
-    if (lastElement.type.includes('markdown'))
-      lastElement.children.push(h.text(oneMoreTime))
-    else if (lastElement.type === 'text')
+    if (lastElement.type.includes('markdown')) {
+      lastElement.children.push(h.text(`\n${oneMoreTime}`))
+    }
+    else if (lastElement.type === 'text') {
       session.elements.push(h('p', h('markdown', oneMoreTime)))
-    else
+    }
+    else {
       session.elements.push(h('message', h('markdown', oneMoreTime)))
+    }
   })
 }
