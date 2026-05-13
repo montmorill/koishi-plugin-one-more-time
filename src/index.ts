@@ -37,21 +37,22 @@ export function apply(ctx: Context, config: Config) {
         ?.replace(atSelf(session), '')
         .trimStart()
     }
+    session.oneMoreTime = session.oneMoreTime?.replace(/\s+$/, ' ')
   })
 
   ctx.before('send', (session) => {
     session.content ??= ''
-    session.content = session.content.replace(h.escape(atSelf(session)), '')
-    if (!session.oneMoreTime
+    session.content = session.content.replace(atSelf(session), '')
+    if (!session.oneMoreTime || session.oneMoreTime.length > 100
       || config.skipWords.some(word => session.content?.includes(word))) {
       return
     }
 
-    const oneMoreTime = `> 再来一次 👉 ${shortcut(session.isDirect, session.oneMoreTime)}`
+    const oneMoreTime = shortcut.input(session.oneMoreTime, '再来一次')
     const element = session.elements?.[0]
     const content = element?.type.includes('markdown')
       ? h.unescape(element.children.join(''))
       : escapeMarkdown(session.content)
-    session.elements = [h('markdown', `${content}\n${oneMoreTime}`)]
+    session.elements = [h('markdown', `${content}\n> 👉 ${oneMoreTime}`)]
   })
 }
