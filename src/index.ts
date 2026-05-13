@@ -30,7 +30,7 @@ export function apply(ctx: Context, config: Config) {
     return `<at id="${session.selfId}"/>`
   }
 
-  ctx.on('message-created', (session) => {
+  ctx.on('message', (session) => {
     session.oneMoreTime = session.content
     if (config.filterAtSelf) {
       session.oneMoreTime = session.oneMoreTime
@@ -39,7 +39,7 @@ export function apply(ctx: Context, config: Config) {
     }
   })
 
-  ctx.on('before-send', (session) => {
+  ctx.before('send', (session) => {
     session.content ??= ''
     session.content = session.content.replace(h.escape(atSelf(session)), '')
     if (!session.oneMoreTime
