@@ -1,4 +1,5 @@
 import type { Context } from 'koishi'
+import { QQBot, QQMessageEncoder } from '@satorijs/adapter-qq'
 import { h, Schema } from 'koishi'
 import { shortcut } from 'koishi-plugin-montmorill'
 
@@ -20,10 +21,12 @@ declare module 'koishi' {
 }
 
 export function apply(ctx: Context, config: Config) {
-  ctx.on('message', (session) => {
-    if (session.elements?.[0].type === 'text') {
-      const content: string = session.elements[0].attrs.content
-      session.oneMoreTime = content.replace(/\s+$/, ' ')
+  ctx.on('message', async (session) => {
+    if (session.bot instanceof QQBot && session.elements && session.channelId) {
+      const encoder = new QQMessageEncoder(session.bot, session.channelId)
+      encoder.ensureMarkdown()
+      await encoder.render(session.elements)
+      session.oneMoreTime = encoder.content
     }
   })
 
@@ -36,23 +39,12 @@ export function apply(ctx: Context, config: Config) {
       return
     }
 
-    let lastElement = session.elements[session.elements.length - 1]
-    if (lastElement.type === 'text') {
-      session.elements.pop()
-      session.elements.push(...h.parse(lastElement.attrs.content))
-      lastElement = session.elements[session.elements.length - 1]
-    }
     const oneMoreTime = session.oneMoreTime.includes('\n')
       ? `> 👉 ${shortcut.input(session.oneMoreTime, '再来一次')}`
       : `> 再来一次 👉 ${shortcut(session.isDirect, session.oneMoreTime)}`
-    if (lastElement.type.includes('markdown')) {
-      lastElement.children.push(h.text(`\n${oneMoreTime}`))
-    }
-    else if (lastElement.type === 'text') {
-      session.elements.push(h('p', h('markdown', oneMoreTime)))
-    }
-    else {
-      session.elements.push(h('message', h('markdown', oneMoreTime)))
-    }
+    if (session.elements.some(element => element.type.replace('qq:', '').startsWith('ark')))
+      session.elements.push(h('br'), h('markdown', oneMoreTime))
+    else
+      session.elements = [h('markdown', ...session.elements, h('br'), oneMoreTime)]
   })
 }
