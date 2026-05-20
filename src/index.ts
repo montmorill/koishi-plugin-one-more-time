@@ -16,7 +16,10 @@ export const Config: Schema<Config> = Schema.object({
 
 declare module 'koishi' {
   interface Session {
-    oneMoreTime?: string
+    oneMoreTime?: {
+      show: string
+      text: string
+    }
   }
 }
 
@@ -26,7 +29,10 @@ export function apply(ctx: Context, config: Config) {
       const encoder = new QQMessageEncoder(session.bot, session.channelId)
       encoder.ensureMarkdown()
       await encoder.render(session.elements)
-      session.oneMoreTime = encoder.content
+      session.oneMoreTime = {
+        show: encoder.content,
+        text: session.content!,
+      }
     }
   })
 
@@ -34,14 +40,14 @@ export function apply(ctx: Context, config: Config) {
 
   ctx.before('send', (session) => {
     if (!session.elements?.length || !session.oneMoreTime
-      || session.oneMoreTime.length > config.maxLength
+      || session.oneMoreTime.text.length > config.maxLength
       || skips.some(regex => regex.test(session.content!))) {
       return
     }
 
-    const oneMoreTime = session.oneMoreTime.includes('\n')
-      ? `> 👉 ${shortcut.input(session.oneMoreTime, '再来一次')}`
-      : `> 再来一次 👉 ${shortcut(session.isDirect, session.oneMoreTime)}`
+    const oneMoreTime = session.oneMoreTime.text.includes('\n')
+      ? `> 👉 ${shortcut.input(session.oneMoreTime.text, '再来一次')}`
+      : `> 再来一次 👉 ${shortcut(session.isDirect, session.oneMoreTime.text, session.oneMoreTime.show)}`
     if (session.elements.some(element => element.type.replace('qq:', '').startsWith('ark')))
       session.elements.push(h('br'), h('markdown', oneMoreTime))
     else
