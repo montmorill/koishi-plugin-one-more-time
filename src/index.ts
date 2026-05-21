@@ -25,13 +25,18 @@ declare module 'koishi' {
 
 export function apply(ctx: Context, config: Config) {
   ctx.on('message', async (session) => {
-    if (session.bot instanceof QQBot && session.elements && session.channelId) {
+    if (session.content && session.elements
+      && session.channelId && session.bot instanceof QQBot) {
       const encoder = new QQMessageEncoder(session.bot, session.channelId)
       encoder.ensureMarkdown()
       await encoder.render(session.elements)
       session.oneMoreTime = {
+        text: session.elements
+          .filter(element => element.type === 'text')
+          .map(element => element.attrs.content)
+          .join(''),
+        // @ts-expect-error hack private field
         show: encoder.content,
-        text: session.content!,
       }
     }
   })
