@@ -17,7 +17,7 @@ export const Config: Schema<Config> = Schema.object({
 declare module 'koishi' {
   interface Session {
     oneMoreTime?: {
-      show: string
+      show?: string
       text: string
     }
   }
@@ -27,16 +27,19 @@ export function apply(ctx: Context, config: Config) {
   ctx.on('message', async (session) => {
     if (session.content && session.elements
       && session.channelId && session.bot instanceof QQBot) {
-      const encoder = new QQMessageEncoder(session.bot, session.channelId)
-      encoder.ensureMarkdown()
-      await encoder.render(session.elements)
       session.oneMoreTime = {
         text: session.elements
           .filter(element => element.type === 'text')
           .map(element => element.attrs.content)
           .join(''),
+      }
+      if (session.elements.every(element => element.type === 'text'
+        && !element.attrs.content.includes('\n'))) {
+        const encoder = new QQMessageEncoder(session.bot, session.channelId)
+        encoder.ensureMarkdown()
+        await encoder.render(session.elements)
         // @ts-expect-error hack private field
-        show: encoder.content,
+        session.oneMoreTime.show = encoder.content
       }
     }
   })
@@ -50,9 +53,9 @@ export function apply(ctx: Context, config: Config) {
       return
     }
 
-    const oneMoreTime = session.oneMoreTime.text.includes('\n')
-      ? `> 👉 ${shortcut.input(session.oneMoreTime.text, '再来一次')}`
-      : `> 再来一次 👉 ${shortcut(session.isDirect, session.oneMoreTime.text, session.oneMoreTime.show)}`
+    const oneMoreTime = session.oneMoreTime.show
+      ? `> 再来一次 👉 ${shortcut(session.isDirect, session.oneMoreTime.text, session.oneMoreTime.show)}`
+      : `> 👉 ${shortcut.input(session.oneMoreTime.text, '再来一次')}`
     if (session.elements.some(element => element.type.replace('qq:', '').startsWith('ark')))
       session.elements.push(h('br'), h('markdown', oneMoreTime))
     else
