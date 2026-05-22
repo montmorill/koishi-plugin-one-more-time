@@ -15,8 +15,8 @@
     "lib"
   ],
   "peerDependencies": {
+    "@satorijs/adapter-qq": "*",
     "koishi": "4.18.11",
-    "koishi-plugin-adapter-qq-crack": "^1.0.6",
     "koishi-plugin-montmorill": "*"
   }
 }
