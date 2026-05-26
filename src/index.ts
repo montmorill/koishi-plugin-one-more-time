@@ -31,7 +31,8 @@ export function apply(ctx: Context, config: Config) {
         text: session.elements
           .filter(element => element.type === 'text')
           .map(element => element.attrs.content)
-          .join(''),
+          .join('')
+          .replace(/\s+$/g, ' '),
       }
       if (session.elements.every(element => element.type === 'text'
         && !element.attrs.content.includes('\n'))) {
@@ -39,7 +40,7 @@ export function apply(ctx: Context, config: Config) {
         encoder.ensureMarkdown()
         await encoder.render(session.elements)
         // @ts-expect-error hack private field
-        session.oneMoreTime.show = encoder.content
+        session.oneMoreTime.show = encoder.content.trim()
       }
     }
   })
@@ -49,7 +50,8 @@ export function apply(ctx: Context, config: Config) {
   ctx.before('send', (session) => {
     if (!session.elements?.length || !session.oneMoreTime
       || session.oneMoreTime.text.length > config.maxLength
-      || skips.some(regex => regex.test(session.content!))) {
+      || skips.some(regex => regex.test(session.content!))
+      || session.stripped.content === session.oneMoreTime.text) {
       return
     }
 
