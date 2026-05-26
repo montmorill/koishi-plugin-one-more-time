@@ -28,12 +28,7 @@ export function apply(ctx: Context, config: Config) {
     if (session.content && session.elements
       && session.channelId && session.bot instanceof QQBot) {
       session.oneMoreTime = {
-        text: session.elements
-          .filter(element => element.type === 'text')
-          .map(element => element.attrs.content)
-          .join('')
-          .trimStart()
-          .replace(/\s+$/g, ' '),
+        text: session.stripped.content,
       }
       if (session.elements.every(element => element.type === 'text'
         && !element.attrs.content.includes('\n'))) {
@@ -52,7 +47,7 @@ export function apply(ctx: Context, config: Config) {
     if (!session.elements?.length || !session.oneMoreTime
       || session.oneMoreTime.text.length > config.maxLength
       || skips.some(regex => regex.test(session.content!))
-      || session.stripped.content === session.oneMoreTime.text.trimEnd()) {
+      || session.content === session.oneMoreTime.text) {
       return
     }
 
