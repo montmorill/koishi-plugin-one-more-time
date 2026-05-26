@@ -32,6 +32,7 @@ export function apply(ctx: Context, config: Config) {
           .filter(element => element.type === 'text')
           .map(element => element.attrs.content)
           .join('')
+          .trimStart()
           .replace(/\s+$/g, ' '),
       }
       if (session.elements.every(element => element.type === 'text'
@@ -51,7 +52,7 @@ export function apply(ctx: Context, config: Config) {
     if (!session.elements?.length || !session.oneMoreTime
       || session.oneMoreTime.text.length > config.maxLength
       || skips.some(regex => regex.test(session.content!))
-      || session.stripped.content === session.oneMoreTime.text) {
+      || session.stripped.content === session.oneMoreTime.text.trimEnd()) {
       return
     }
 
