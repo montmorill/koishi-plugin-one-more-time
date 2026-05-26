@@ -47,7 +47,7 @@ export function apply(ctx: Context, config: Config) {
     if (!session.elements?.length || !session.oneMoreTime
       || session.oneMoreTime.text.length > config.maxLength
       || skips.some(regex => regex.test(session.content!))
-      || session.content === session.oneMoreTime.text) {
+      || session.content?.trim() === session.oneMoreTime.text) {
       return
     }
 
