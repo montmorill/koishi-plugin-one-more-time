@@ -1,7 +1,6 @@
 import type { Context } from 'koishi'
-import { QQBot, QQMessageEncoder } from '@satorijs/adapter-qq'
+import { inlinecmd, QQBot, QQMessageEncoder } from '@satorijs/adapter-qq'
 import { h, Schema } from 'koishi'
-import { shortcut } from 'koishi-plugin-montmorill'
 
 export const name = 'one-more-time'
 export interface Config {
@@ -47,13 +46,19 @@ export function apply(ctx: Context, config: Config) {
     if (!session.elements?.length || !session.oneMoreTime
       || session.oneMoreTime.text.length > config.maxLength
       || skips.some(regex => regex.test(session.content!))
-      || session.content?.trim() === session.oneMoreTime.text) {
+      // || session.content?.trim() === session.oneMoreTime.text
+    ) {
       return
     }
-
     const oneMoreTime = session.oneMoreTime.show
-      ? `> 再来一次 👉 ${shortcut(session.isDirect, session.oneMoreTime.text, session.oneMoreTime.show)}`
-      : `> 👉 ${shortcut.input(session.oneMoreTime.text, '再来一次')}`
+      ? `> 再来一次 👉 ${inlinecmd({
+        enter: session.isDirect,
+        ...session.oneMoreTime,
+      })}`
+      : `> 👉 ${inlinecmd({
+        text: session.oneMoreTime.text,
+        show: '再来一次',
+      })}`
     if (session.elements.some(element => element.type.replace('qq:', '').startsWith('ark')))
       session.elements.push(h('br'), h('markdown', oneMoreTime))
     else
