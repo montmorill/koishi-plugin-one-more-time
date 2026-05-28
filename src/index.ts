@@ -9,8 +9,8 @@ export interface Config {
 }
 
 export const Config: Schema<Config> = Schema.object({
-  maxLength: Schema.number().default(100).description('最大长度。'),
-  skips: Schema.array(Schema.string()).default([]).description('跳过匹配的内容。'),
+  maxLength: Schema.number().default(100).description('最大长度'),
+  skips: Schema.array(Schema.string()).default([]).description('跳过匹配的内容'),
 })
 
 declare module 'koishi' {
